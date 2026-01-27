@@ -1,0 +1,54 @@
+name: evpn-mpls
+
+
+topology:
+  defaults:
+    kind: vr-sros
+    
+  kinds:
+    vr-sros:
+      image: vrnetlab/nokia_sros:24.10.R3
+      license: /root/clab/licenses/24/license.txt
+  
+  nodes:
+    leaf1:
+      type: ixr-s
+      startup-config: leaf1-startup.partial.txt
+    leaf2:
+      type: ixr-s
+      startup-config: leaf2-startup.partial.txt
+    leaf3:
+      type: ixr-s
+      startup-config: leaf3-startup.partial.txt
+    spine1:
+      type: ixr-s
+      startup-config: spine1-startup.partial.txt
+    host1:
+      kind: linux
+      image: alpine-host:latest
+      binds:
+        - host1.sh:/host1.sh
+      exec: 
+        - bash /host1.sh
+    host2:
+      kind: linux
+      image: alpine-host:latest
+      binds:
+        - host2.sh:/host2.sh
+      exec: 
+        - bash /host2.sh
+    host3:
+      kind: linux
+      image: alpine-host:latest
+      binds:
+        - host3.sh:/host3.sh
+      exec:
+        - bash /host3.sh
+    
+  links:
+    - endpoints: ["leaf1:eth1", "spine1:eth1"]
+    - endpoints: ["leaf2:eth1", "spine1:eth2"]
+    - endpoints: ["leaf3:eth1", "spine1:eth3"]
+    - endpoints: ["leaf1:eth10", "host1:eth1"]
+    - endpoints: ["leaf2:eth10", "host2:eth1"]
+    - endpoints: ["leaf3:eth10", "host3:eth1"] 
