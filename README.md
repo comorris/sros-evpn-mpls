@@ -12,8 +12,8 @@ All configurations are in MD-CLI flat format. Reference chassis is the ixr-s and
 The following services are covered in this guide:
 
 
-- [VPLS](#VPLS)
-- [EVPN-MPLS](#EVPN-MPLS-with-SR-OSPF-Underlay)
+- [SR-MPLS](#SR-MPLS Underlay)
+- [EVPN-MPLS](#EVPN-MPLS)
 
 A list of [show commands](#show-commands) is also provided in this guide.
 
