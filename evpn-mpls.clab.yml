@@ -13,35 +13,35 @@ topology:
   nodes:
     leaf1:
       type: ixr-s
-      startup-config: leaf1-startup.partial.txt
+      startup-config: configs/leaf1-startup.partial.txt
     leaf2:
       type: ixr-s
-      startup-config: leaf2-startup.partial.txt
+      startup-config: configs/leaf2-startup.partial.txt
     leaf3:
       type: ixr-s
-      startup-config: leaf3-startup.partial.txt
+      startup-config: configs/leaf3-startup.partial.txt
     spine1:
       type: ixr-s
-      startup-config: spine1-startup.partial.txt
+      startup-config: configs/spine1-startup.partial.txt
     host1:
       kind: linux
       image: alpine-host:latest
       binds:
-        - host1.sh:/host1.sh
+        - host_scripts/host1.sh:/host1.sh
       exec: 
         - bash /host1.sh
     host2:
       kind: linux
       image: alpine-host:latest
       binds:
-        - host2.sh:/host2.sh
+        - host_scripts/host2.sh:/host2.sh
       exec: 
         - bash /host2.sh
     host3:
       kind: linux
       image: alpine-host:latest
       binds:
-        - host3.sh:/host3.sh
+        - host_scripts/host3.sh:/host3.sh
       exec:
         - bash /host3.sh
     
