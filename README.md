@@ -99,6 +99,19 @@ At the end of the deployment process, the following table will be displayed:
 ╰──────────────────────────┴────────────────────────────────────┴───────────┴────────────────────╯
 ```
 
+# Access
+
+Login to any of the leaf or spine routers using ssh with username and password as admin.  For example:
+```
+ssh admin@clab-evpn-mpls-p1-leaf1
+```
+
+Interactively access the terminal of the linux hosts using 'docker exec -it'.  For example:
+
+```
+docker exec -it clab-evpn-mpls-p1-host1 /bin/bash
+```
+
 # SR-MPLS
 
 ## Segment Routing Lable Range
