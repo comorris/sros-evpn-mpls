@@ -133,9 +133,9 @@ show router ospf opaque-database
 
 #### Opaque Database LSA Types
 
-Type 1 = Traffic Engineering
-Type 4 = Router Information LSA
-Type 7 = Extended Prefix LSA
+Type 1 = Traffic LSA\
+Type 4 = Router Information LSA\
+Type 7 = Extended Prefix LSA\
 Type 8 = Extended Link LSA
 
 ```
