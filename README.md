@@ -1,6 +1,6 @@
 # SR OS EVPN-MPLS Configuration Reference Guide
 
-This page provides the basic step-by-step configuration required to migrate from RSVP-TE MPLS based VPLS services to EVPN-MPLS, using Segment Routing as the underlay infrastructure.  
+This page provides the basic step-by-step configuration required to migrate from RSVP-TE MPLS based VPLS services to EVPN-MPLS, using Segment Routing as the underlay transport.  
 
 | Contributors | Handle |
 |---|---|
@@ -12,10 +12,8 @@ All configurations are in MD-CLI flat format. Reference chassis is the ixr-s and
 The following services are covered in this guide:
 
 
-- [SR-MPLS](#SR-MPLS Underlay)
+- [SR-MPLS](#SR-MPLS)
 - [EVPN-MPLS](#EVPN-MPLS)
-
-A list of [show commands](#show-commands) is also provided in this guide.
 
 # Topology, IPv4 Addressing and Description
 
@@ -23,20 +21,22 @@ We will be using the below topology with 3 routers, 1 spine router and 3 linux h
 
 Each router will have a base configuration with OSPF underlay, RSVP-TE and VPLS already configured.  Configuration examples for converting to EVPN-MPLS with Segment Routing using OSFP (SRO-OSPF) will be shown below.  Only the VPLS services on Leaf1 and Leaf2 will be converted to VPLS over EVPN-MPLS, while leaf 3 will remain as VPLS over MPLS to show interworking.  The majority of the configuration will be done on Leaf1 and Leaf2.  
 
-In the final step, we will configure Leaf3 to utilize SR-OSPF for it's MPLS tunnels to fully convert the network to SR-OSPF while still operating in VPLS over MPLS mode.
+In the final step, we will configure all leaf routers to utilize SR-OSPF for the transport tunnels to fully convert the network to SR-OSPF and showcase interoping with other VPLS over MPLS services.
 
-The physical topology is shown below
+The physical and logical topology is shown below:
+
+## Physical Topology
 
 <img src="./images/physical-topology.png" width="100%"/>
 
 ## Initial Logical Topology for VPLS over MPLS
+
 <img src="./images/rsvp.png" width="100%"/>
 
-## Endig Logical Toployg for VPLS over EVPN-MPLS w/SR-OSPF
+## Ending Logical Topology for VPLS over EVPN-MPLS w/SR-OSPF
 
 The goal of this lab is end up with a fully functioning EVPN-MPLS network using SR-OSPF for the MPLS transport
 <img src="./images/evpn-mpls.png" width="100%"/>
-
 
 # vSIM image
 
@@ -54,16 +54,16 @@ git clone https://github.com/comorris/sros-evpn-mpls.git
 Navigate to the directory for this lab:
 
 ```
-cd evpn-mpls
+cd sros-evpn-mpls
 ```
 
-Ensure vSIM license is copied.
+Ensure a vSIM license is copied into the root of the folder
 
 Modify the Topology file:
 
 First modify the topology file to give it a unique name.  Since multiple copies of this lab will be hosted on the same host machine, each topologyanem must be unique, otherwise we will run into conflicts.
 
-Change the 'name' field from evpn-mpls to evpn-mpls-pod1 for example using your preferred text editor (vi, nano, etc..)
+Change the 'name' field from evpn-mpls to evpn-mpls-p1 for example using your preferred text editor (vi, nano, etc..)
 
 Deploy the lab:
 ```
@@ -73,42 +73,33 @@ clab deploy --topo evpn-mpls.clab.yml
 At the end of the deployment process, the following table will be displayed:
 
 ```
-╭──────┬────────────────────────────────────┬─────────┬────────────────────╮
-│ Name │             Kind/Image             │  State  │   IPv4/6 Address   │
-├──────┼────────────────────────────────────┼─────────┼────────────────────┤
-│ cea  │ linux                              │ running │ 172.10.10.10       │
-│      │ ghcr.io/srl-labs/network-multitool │         │ 2001:172:10:10::10 │
-├──────┼────────────────────────────────────┼─────────┼────────────────────┤
-│ ceb  │ linux                              │ running │ 172.10.10.11       │
-│      │ ghcr.io/srl-labs/network-multitool │         │ 2001:172:10:10::11 │
-├──────┼────────────────────────────────────┼─────────┼────────────────────┤
-│ cey  │ linux                              │ running │ 172.10.10.13       │
-│      │ ghcr.io/srl-labs/network-multitool │         │ 2001:172:10:10::13 │
-├──────┼────────────────────────────────────┼─────────┼────────────────────┤
-│ cez  │ linux                              │ running │ 172.10.10.12       │
-│      │ ghcr.io/srl-labs/network-multitool │         │ 2001:172:10:10::12 │
-├──────┼────────────────────────────────────┼─────────┼────────────────────┤
-│ p1   │ nokia_srsim                        │ running │ 172.10.10.6        │
-│      │ localhost/nokia/srsim:25.7.R1      │         │ 2001:172:10:10::6  │
-├──────┼────────────────────────────────────┼─────────┼────────────────────┤
-│ p2   │ nokia_srsim                        │ running │ 172.10.10.7        │
-│      │ localhost/nokia/srsim:25.7.R1      │         │ 2001:172:10:10::7  │
-├──────┼────────────────────────────────────┼─────────┼────────────────────┤
-│ pe1  │ nokia_srsim                        │ running │ 172.10.10.2        │
-│      │ localhost/nokia/srsim:25.7.R1      │         │ 2001:172:10:10::2  │
-├──────┼────────────────────────────────────┼─────────┼────────────────────┤
-│ pe2  │ nokia_srsim                        │ running │ 172.10.10.3        │
-│      │ localhost/nokia/srsim:25.7.R1      │         │ 2001:172:10:10::3  │
-├──────┼────────────────────────────────────┼─────────┼────────────────────┤
-│ pe3  │ nokia_srsim                        │ running │ 172.10.10.4        │
-│      │ localhost/nokia/srsim:25.7.R1      │         │ 2001:172:10:10::4  │
-├──────┼────────────────────────────────────┼─────────┼────────────────────┤
-│ pe4  │ nokia_srsim                        │ running │ 172.10.10.5        │
-│      │ localhost/nokia/srsim:25.7.R1      │         │ 2001:172:10:10::5  │
-╰──────┴────────────────────────────────────┴─────────┴────────────────────╯
+╭──────────────────────────┬────────────────────────────────────┬───────────┬────────────────────╮
+│           Name           │             Kind/Image             │   State   │   IPv4/6 Address   │
+├──────────────────────────┼────────────────────────────────────┼───────────┼────────────────────┤
+│ clab-evpn-mpls-p1-host1  │ linux                              │ running   │ 172.20.20.20       │
+│                          │ ghcr.io/srl-labs/network-multitool │           │ 3fff:172:20:20::14 │
+├──────────────────────────┼────────────────────────────────────┼───────────┼────────────────────┤
+│ clab-evpn-mpls-p1-host2  │ linux                              │ running   │ 172.20.20.23       │
+│                          │ ghcr.io/srl-labs/network-multitool │           │ 3fff:172:20:20::17 │
+├──────────────────────────┼────────────────────────────────────┼───────────┼────────────────────┤
+│ clab-evpn-mpls-p1-host3  │ linux                              │ running   │ 172.20.20.22       │
+│                          │ ghcr.io/srl-labs/network-multitool │           │ 3fff:172:20:20::16 │
+├──────────────────────────┼────────────────────────────────────┼───────────┼────────────────────┤
+│ clab-evpn-mpls-p1-leaf1  │ nokia_sros                         │ running   │ 172.20.20.21       │
+│                          │ vrnetlab/nokia_sros:24.10.R3       │ (healthy) │ 3fff:172:20:20::15 │
+├──────────────────────────┼────────────────────────────────────┼───────────┼────────────────────┤
+│ clab-evpn-mpls-p1-leaf2  │ nokia_sros                         │ running   │ 172.20.20.24       │
+│                          │ vrnetlab/nokia_sros:24.10.R3       │ (healthy) │ 3fff:172:20:20::18 │
+├──────────────────────────┼────────────────────────────────────┼───────────┼────────────────────┤
+│ clab-evpn-mpls-p1-leaf3  │ nokia_sros                         │ running   │ 172.20.20.19       │
+│                          │ vrnetlab/nokia_sros:24.10.R3       │ (healthy) │ 3fff:172:20:20::13 │
+├──────────────────────────┼────────────────────────────────────┼───────────┼────────────────────┤
+│ clab-evpn-mpls-p1-spine1 │ nokia_sros                         │ running   │ 172.20.20.18       │
+│                          │ vrnetlab/nokia_sros:24.10.R3       │ (healthy) │ 3fff:172:20:20::12 │
+╰──────────────────────────┴────────────────────────────────────┴───────────┴────────────────────╯
 ```
 
-# SR-MPLS Underlay
+# SR-MPLS
 
 ## Segment Routing Lable Range
 
@@ -141,6 +132,7 @@ show router ospf opaque-database
 ```
 
 #### Opaque Database LSA Types
+
 Type 1 = Traffic Engineering
 Type 4 = Router Information LSA
 Type 7 = Extended Prefix LSA
@@ -150,12 +142,12 @@ Type 8 = Extended Link LSA
 show router ospf opaque-database adv-router x.x.x.x ls-id x detail 
 ```
 
-Display the router tunnel table to show both SR and RSVP tunnels
+Display the router tunnel table to show both SR and RSVP tunnels:
 ```
  show router tunnel-table 
 ```
 
-This tools command will provide absolute label id for each tunnel
+This tools command will provide absolute label id for each tunnel:
 ```
 tools dump router segment-routing tunnel
 ```
@@ -166,7 +158,7 @@ tools dump router segment-routing tunnel
 
 Configure BGP to exchange EVPN routes.  We will setup a iBGP peering session between all Leaf1 and Leaf2 only because as mentioned in the toplogy session, only Leaf1 and Leaf2 will be configured with over VPLS over EVPN-MPLS.
 
-Leaf1 example peering to the system IP of Leaf2
+Leaf1 example peering to the system IP of Leaf2:
 ```
 /configure router autonomous-system 65001
 /configure router "Base" bgp min-route-advertisement 1
@@ -184,7 +176,7 @@ Leaf1 example peering to the system IP of Leaf2
 ## Migrate to spoke-sdp
 On Leaf1 and Leaf2 migrate to spoke SDP in order to add the EVPN configuration.  We will also create a Split Horizon group which we will add both the spokes and EVPN tunnels to.
 
-Example on Leaf1
+Example on Leaf1:
 ```
 /configure service vpls "vlan10" delete mesh-sdp 1:10 
 /configure service vpls "vlan10" delete mesh-sdp 3:10 
@@ -196,8 +188,9 @@ Example on Leaf1
 ```
 
 ## EVPN
+
 In this section will add add the necessary bgp-evpn configuration options
-Example on Leaf1
+Example on Leaf1:
 ```
 /configure service vpls "vlan10" proxy-arp admin-state enable
 /configure service vpls "vlan10" proxy-arp dynamic-populate true
@@ -214,7 +207,7 @@ Example on Leaf1
 
 ### show commands
 
-EVPN Route verification 
+EVPN Route verification:
 ```
 show router bgp neighbor "<neighbor-ip>" advertised-routes evpn incl-mcast 
 show router bgp neighbor "<neighbor-ip>" advertised-routes evpn mac 
@@ -222,7 +215,7 @@ show router bgp neighbor "<neighbor-ip>" received-routes evpn
 show router bgp neighbor "<neighbor-ip>" advertised-routes evpn 
 ```
 
-Verify proxy arp
+Verify proxy arp:
 ```
 show service id 10 proxy-arp detail 
 ```
@@ -235,6 +228,7 @@ Let's change that by migrating the VPLS services over to SR-OSPF.
 Here we will showcase two different options for migrating to SR-OSPF.
 
 ## Option 1: Change tunnel preference on a per service basis
+
 This will only affect specific services that we configure to prefer SR-OSPF over RSVP-TE.
 
 Enter the following command on both Leaf1 and Leaf2
@@ -254,7 +248,8 @@ Once we have verified that our tunnels work over SR-OSPF lets revert back to res
 ```
 
 ## Option 2: Change tunnel preference system wide
-Now that we have confirmed sr-ospf is working, let's make a system wide change and convert all 3 leaf routers to use SR-OSPF.  **RSVP is given a higher preference value so that OSPF is preferred in our topology.**
+
+Now that we have confirmed SR-OSPF is working, let's make a system wide change and convert all 3 leaf routers to use SR-OSPF tunnels.  **RSVP is given a higher preference value so that OSPF is preferred in our topology.**
 
 Here we will raise the tunnel table preference for RSVP.  Now SR-OSPF, when avaiable, will be the preferred tunnel for all services.
 ```
@@ -270,7 +265,7 @@ show service id 10 fdb detail
 
 Here, we will convert all spoke SDPs connected to Leaf3 to SR-OSPF and remove the spoke SDPs between Leaf1 and Leaf2, as EVPN-MPLS is now preferred.
 
-Example on Leaf1
+Example on Leaf1:
 ```
 /configure service vpls "vlan10" delete spoke-sdp 2:10 
 /configure service delete sdp 2
@@ -278,7 +273,7 @@ Example on Leaf1
 /configure service sdp 3 sr-ospf true 
 ```
 
-Example on Leaf1
+Example on Leaf1:
 ```
 /configure service vpls "vlan10" delete spoke-sdp 1:10 
 /configure service delete sdp 1
@@ -286,7 +281,7 @@ Example on Leaf1
 /configure service sdp 3 sr-ospf true 
 ```
 
-Example on Leaf3
+Example on Leaf3:
 ```
 /configure service sdp 1 delete lsp "to-Leaf1" 
 /configure service sdp 1 sr-ospf true
@@ -294,7 +289,7 @@ Example on Leaf3
 /configure service sdp 2 sr-ospf true
 ```
 
-Verify SR-OSFP is enabled on the SDP
+Verify SR-OSFP is enabled on the SDP:
 ```
 show service  sdp 1 detail 
  
@@ -313,18 +308,18 @@ RSVP is no longer preferred.
 
 Now let's take a big leap and remove mpls and rsvp completely from all routers!!
 
-Run the below commands on Leaf1, Leaf2, Leaf3 and Spine1
+Run the below commands on Leaf1, Leaf2, Leaf3 and Spine1:
 ```
 /configure router delete rsvp 
 /configure router delete mpls
 ```
 
-Verify that SR-OSPF tunnels are used int the tunnel table
+Verify that SR-OSPF tunnels are used int the tunnel table:
 ```
 show router tunnel-table 
 ```
 
-Verify all MACs are still in the fdb table 
+Verify all MACs are still in the fdb table:
 ```
 show service id 10 fdb detail 
 ```

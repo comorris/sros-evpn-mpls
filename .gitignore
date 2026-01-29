@@ -5,4 +5,5 @@ __pycache__/
 venv/
 .env
 *.log
+license.txt
 clab-evpn-mpls/
