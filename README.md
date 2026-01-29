@@ -99,7 +99,7 @@ At the end of the deployment process, the following table will be displayed:
 ╰──────────────────────────┴────────────────────────────────────┴───────────┴────────────────────╯
 ```
 
-# Access
+## Access
 
 Login to any of the leaf or spine routers using ssh with username and password as admin.  For example:
 ```
