@@ -61,7 +61,7 @@ Ensure a vSIM license is copied into the root of the folder
 
 Modify the Topology file:
 
-First modify the topology file to give it a unique name.  Since multiple copies of this lab will be hosted on the same host machine, each topologyanem must be unique, otherwise we will run into conflicts.
+First modify the topology file to give it a unique name.  Since multiple copies of this lab will be hosted on the same host machine, each topology name must be unique, otherwise we will run into conflicts.
 
 Change the 'name' field from evpn-mpls to evpn-mpls-p1 for example using your preferred text editor (vi, nano, etc..)
 
