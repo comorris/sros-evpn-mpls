@@ -191,12 +191,12 @@ On Leaf1 and Leaf2 migrate to spoke SDP in order to add the EVPN configuration. 
 
 Example on Leaf1:
 ```
-/configure service vpls "vlan10" delete mesh-sdp 1:10 
+/configure service vpls "vlan10" delete mesh-sdp 2:10 
 /configure service vpls "vlan10" delete mesh-sdp 3:10 
-/configure service vpls "vlan10" spoke-sdp 1:10 admin-state enable
+/configure service vpls "vlan10" spoke-sdp 2:10 admin-state enable
 /configure service vpls "vlan10" spoke-sdp 3:10 admin-state enable
 /configure service { vpls "vlan10" split-horizon-group "shg-10" }
-/configure service vpls "vlan10" spoke-sdp 1:10 split-horizon-group "shg-10"
+/configure service vpls "vlan10" spoke-sdp 2:10 split-horizon-group "shg-10"
 /configure service vpls "vlan10" spoke-sdp 3:10 split-horizon-group "shg-10"
 ```
 
@@ -207,7 +207,7 @@ Example on Leaf1:
 ```
 /configure service vpls "vlan10" proxy-arp admin-state enable
 /configure service vpls "vlan10" proxy-arp dynamic-populate true
-/configure service vpls "vlan10" bgp 1 route-distinguisher "2.2.2.2:10"
+/configure service vpls "vlan10" bgp 1 route-distinguisher "1.1.1.1:10"
 /configure service vpls "vlan10" bgp 1 route-target export "target:65001:10"
 /configure service vpls "vlan10" bgp 1 route-target import "target:65001:10"
 /configure service vpls "vlan10" bgp-evpn evi 10
@@ -286,7 +286,7 @@ Example on Leaf1:
 /configure service sdp 3 sr-ospf true 
 ```
 
-Example on Leaf1:
+Example on Leaf2:
 ```
 /configure service vpls "vlan10" delete spoke-sdp 1:10 
 /configure service delete sdp 1
