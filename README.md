@@ -221,7 +221,7 @@ Interfaces : 2
 
 ### MPLS Tunnels and LSP paths
 
-Router Tunnel Table: Take note MPLS/RSVP is currently used.  Later in this lab, we will use this same command after we migrate to SR-OSPF.
+Router Tunnel Table: Take note that MPLS/RSVP is the tunnel type currently used.  Later in this lab, we will use this same command after we migrate to SR-OSPF.
 
 ```
 A:admin@leaf1# show router tunnel-table 
