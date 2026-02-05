@@ -114,7 +114,7 @@ docker exec -it clab-evpn-mpls-p1-host1 /bin/bash
 
 # Verify Current Setup
 
-To get started with the lab, we will run various show commands to establish a baseline of connectivity.
+To get started with the lab, we will run various show commands to establish a baseline of connectivity.  Run these commands on each router in the topology.  The below example output is from Leaf1.
 
 ## Verify Routing
 
