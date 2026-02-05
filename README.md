@@ -112,6 +112,257 @@ Interactively access the terminal of the linux hosts using 'docker exec -it'.  F
 docker exec -it clab-evpn-mpls-p1-host1 /bin/bash
 ```
 
+# Verify Current Setup
+
+To get started with the lab, we will run various show commands to establish a baseline of connectivity.
+
+## Verify Routing
+
+### OSPF 
+
+show OSPF neighbors
+```
+A:admin@leaf1# show router ospf neighbor 
+
+===============================================================================
+Rtr Base OSPFv2 Instance 0 Neighbors
+===============================================================================
+Interface-Name                   Rtr Id          State      Pri  RetxQ   TTL
+   Area-Id
+-------------------------------------------------------------------------------
+toSpine1                         10.101.1.1      Full       1    0       39
+   0.0.0.0
+-------------------------------------------------------------------------------
+No. of Neighbors: 1
+===============================================================================
+```
+
+### Route Table
+
+show the route table and ensure that all system IPs are learned.
+
+```
+A:admin@leaf1# show router route-table 
+
+===============================================================================
+Route Table (Router: Base)
+===============================================================================
+Dest Prefix[Flags]                            Type    Proto     Age        Pref
+      Next Hop[Interface Name]                                    Metric   
+-------------------------------------------------------------------------------
+1.1.1.1/32                                    Local   Local     00h11m14s  0
+       system                                                       0
+2.2.2.2/32                                    Remote  OSPF      00h10m29s  10
+       10.1.1.0                                                     2
+3.3.3.3/32                                    Remote  OSPF      00h10m29s  10
+       10.1.1.0                                                     2
+10.1.1.0/31                                   Local   Local     00h10m35s  0
+       toSpine1                                                     0
+10.1.2.0/31                                   Remote  OSPF      00h10m29s  10
+       10.1.1.0                                                     2
+10.1.3.0/31                                   Remote  OSPF      00h10m29s  10
+       10.1.1.0                                                     2
+10.101.1.1/32                                 Remote  OSPF      00h10m29s  10
+       10.1.1.0                                                     1
+-------------------------------------------------------------------------------
+No. of Routes: 7
+Flags: n = Number of times nexthop is repeated
+       B = BGP backup route available
+       L = LFA nexthop available
+       S = Sticky ECMP requested
+===============================================================================
+```
+
+## Verify MPLS
+
+### RSVP Interfaces
+
+List all rsvp interfaces
+
+```
+A:admin@leaf1# show router rsvp interface 
+
+===============================================================================
+RSVP Interfaces
+===============================================================================
+Interface                        Total    Active    Total BW  Resv BW   Adm Opr
+                                 Sessions Sessions  (Mbps)    (Mbps)        
+-------------------------------------------------------------------------------
+system                           -        -         -         -         Up  Up
+toSpine1                         2        2         10000     0         Up  Up
+-------------------------------------------------------------------------------
+Interfaces : 2
+===============================================================================
+```
+
+### MPLS Interfaces
+
+List all mpls interfaces
+
+```
+A:admin@leaf1# show router mpls interface 
+
+===============================================================================
+MPLS Interfaces
+===============================================================================
+Interface                           Port-id           Adm  Opr(V4/V6) TE-
+                                                                      metric
+-------------------------------------------------------------------------------
+system                              system            Up   Up/Down    None
+  Admin Groups                      None
+  SRLG Groups                       None
+toSpine1                            1/1/1             Up   Up/Down    None
+  Admin Groups                      None
+  SRLG Groups                       None
+-------------------------------------------------------------------------------
+Interfaces : 2
+===============================================================================
+```
+
+### MPLS Tunnels and LSP paths
+
+Router Tunnel Table: Take note MPLS/RSVP is currently used.  Later in this lab, we will use this same command after we migrate to SR-OSPF.
+
+```
+A:admin@leaf1# show router tunnel-table 
+
+===============================================================================
+IPv4 Tunnel Table (Router: Base)
+===============================================================================
+Destination           Owner     Encap TunnelId  Pref   Nexthop        Metric
+   Color                                                              
+-------------------------------------------------------------------------------
+2.2.2.2/32            sdp       MPLS  2         5      2.2.2.2        0
+2.2.2.2/32            rsvp      MPLS  1         7      10.1.1.0       2
+3.3.3.3/32            sdp       MPLS  3         5      3.3.3.3        0
+3.3.3.3/32            rsvp      MPLS  2         7      10.1.1.0       2
+-------------------------------------------------------------------------------
+Flags: B = BGP or MPLS backup hop available
+       L = Loop-Free Alternate (LFA) hop available
+       E = Inactive best-external BGP route
+       k = RIB-API or Forwarding Policy backup hop
+===============================================================================
+```
+List all configured MPLS LSP Paths
+
+```
+A:admin@leaf1# show router mpls lsp
+
+===============================================================================
+MPLS LSPs (Originating)
+===============================================================================
+LSP Name                                            Tun     Fastfail  Adm  Opr
+  To                                                Id      Config         
+-------------------------------------------------------------------------------
+to-Leaf2                                            1       Yes       Up   Up
+  2.2.2.2                                                                  
+to-Leaf3                                            2       Yes       Up   Up
+  3.3.3.3                                                                  
+-------------------------------------------------------------------------------
+LSPs : 2
+===============================================================================
+```
+
+LSP Path detail
+
+```
+show router mpls lsp path detail       
+
+
+ ------------------------------SNIP--------------------------------------------
+Explicit Hops    :                         
+    No Hops Specified
+Actual Hops      :                         
+    10.1.1.1(1.1.1.1)                            Record Label        : N/A
+ -> 10.1.1.0(10.101.1.1)                         Record Label        : 524287
+ -> 10.1.2.1(2.2.2.2)                            Record Label        : 524286
+Computed Hops    :                         
+    10.1.1.1(S)       
+ -> 10.1.1.0(S)       
+ -> 10.1.2.1(S)       
+Resignal Eligible: False                   
+Last Resignal    : n/a                     CSPF Metric       : 2
+```
+
+
+## Verify Services
+
+List configured SDPs
+
+```
+A:admin@leaf1# show service sdp
+
+============================================================================
+Services: Service Destination Points
+============================================================================
+SdpId  AdmMTU  OprMTU  Far End          Adm  Opr         Del     LSP   Sig
+----------------------------------------------------------------------------
+2      0       8682    2.2.2.2          Up   Up          MPLS    R     TLDP
+3      0       8682    3.3.3.3          Up   Up          MPLS    R     TLDP
+----------------------------------------------------------------------------
+Number of SDPs : 2
+----------------------------------------------------------------------------
+Legend: R = RSVP, L = LDP, B = BGP, M = MPLS-TP, n/a = Not Applicable
+        I = SR-ISIS, O = SR-OSPF, T = SR-TE, F = FPE
+============================================================================
+```
+
+List configured services
+
+```
+A:admin@leaf1# show service service-using 
+
+===============================================================================
+Services 
+===============================================================================
+ServiceId    Type      Adm  Opr  CustomerId Service Name
+-------------------------------------------------------------------------------
+10           VPLS      Up   Up   1          vlan10
+-------------------------------------------------------------------------------
+Matching Services : 1
+-------------------------------------------------------------------------------
+===============================================================================
+```
+
+List configured SAPs
+
+```
+A:admin@leaf1# show service sap-using 
+
+===============================================================================
+Service Access Points 
+===============================================================================
+PortId                          SvcId      Ing.  Ing.          Egr.   Adm  Opr
+                                           QoS   Fltr          Fltr        
+-------------------------------------------------------------------------------
+1/1/10:10                       10         1     none          none   Up   Up
+-------------------------------------------------------------------------------
+Number of SAPs : 1
+-------------------------------------------------------------------------------
+===============================================================================
+```
+
+List learned mac addresses per service.  Ensure that you have learned all 3 mac addresses for the linux hosts
+
+```
+A:admin@leaf1# show service id "10" fdb detail 
+
+===============================================================================
+Forwarding Database, Service 10
+===============================================================================
+ServId     MAC               Source-Identifier       Type     Last Change
+            Transport:Tnl-Id                         Age      
+-------------------------------------------------------------------------------
+10         aa:c1:ab:60:8a:07 sdp:2:10                L/0      02/05/26 13:58:05
+10         aa:c1:ab:62:b6:3d sdp:3:10                L/0      02/05/26 14:00:12
+10         aa:c1:ab:9e:fa:e0 sap:1/1/10:10           L/0      02/05/26 13:57:45
+-------------------------------------------------------------------------------
+No. of MAC Entries: 3
+-------------------------------------------------------------------------------
+Legend:L=Learned O=Oam P=Protected-MAC C=Conditional S=Static Lf=Leaf T=Trusted
+===============================================================================
+```
+
 # SR-MPLS
 
 ## Segment Routing Lable Range
