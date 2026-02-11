@@ -498,6 +498,7 @@ This will only affect specific services that we configure to prefer SR-OSPF over
 Enter the following command on both Leaf1 and Leaf2
 ```
 /configure service vpls "vlan10" bgp-evpn mpls 1 auto-bind-tunnel resolution-filter sr-ospf true
+/configure service vpls "vlan10" bgp-evpn mpls 1 auto-bind-tunnel delete resolution any 
 ```
 
 Verify where the remote MACs are learned from in the FDB table
@@ -507,7 +508,7 @@ show service id 10 fdb detail
 
 Once we have verified that our tunnels work over SR-OSPF lets revert back to resolution 'any' to demonstrate the second option.
 ```
-/configure service vpls "vlan10" bgp-evpn mpls 1 auto-bind-tunnel resolution-filter delete rsvp
+/configure service vpls "vlan10" bgp-evpn mpls 1 auto-bind-tunnel delete resolution-filter sr-ospf 
 /configure service vpls "vlan10" bgp-evpn mpls 1 auto-bind-tunnel resolution any 
 ```
 
